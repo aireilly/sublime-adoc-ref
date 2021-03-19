@@ -3,11 +3,10 @@ import sublime_plugin
 import re
 import threading
 
-source_folder = sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('source_folder', True)
-
 class OpenModuleCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
+        source_folder = sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('source_folder', True)
         for region in self.view.sel():
             s = self.view.substr(self.view.line(region))
             i = region.begin() - self.view.line(region).begin()
