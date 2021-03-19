@@ -6,10 +6,6 @@ folder = '/home/aireilly/openshift-docs/'
 
 class OpenModuleCommand(sublime_plugin.TextCommand):
 
-    MODULE_REGEX = "include\:\:modules\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc\[leveloffset=\+[0-9]\]"
-    DEFAULT_MAX_MODULES = 200
-    SETTINGS_FILENAME = 'AsciiDocModule.sublime-settings'
-    
     def run(self, edit):
         for region in self.view.sel():
             s = self.view.substr(self.view.line(region))
