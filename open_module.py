@@ -2,7 +2,7 @@ import sublime
 import sublime_plugin
 import re
 
-folder = '/home/aireilly/openshift-docs/'
+source_folder = '~/openshift-docs/'
 
 class OpenModuleCommand(sublime_plugin.TextCommand):
 
@@ -23,6 +23,6 @@ class OpenModuleCommand(sublime_plugin.TextCommand):
             ismodule = bool(re.match("include\:\:modules\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc\[leveloffset=\+[0-9]\]", word))
             if ismodule:
                 module = re.search("modules\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc", word).group(0)
-                file_path = folder + module
+                file_path = source_folder + module
                 print ("opening " + file_path)
                 self.view.window().open_file(file_path)
