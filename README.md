@@ -1,9 +1,10 @@
 # sublime-adoc-ref
 Sublime plugin to follow adoc references in asciidoc files.
 
-Copy  `open_module.py` to `~/.config/sublime-text-3/Packages/User/`
+* Copy `open_module.py` and `OpenModule.sublime-settings` to `~/.config/sublime-text-3/Packages/User/`
+* Modify `OpenModule.sublime-settings` to match your asciidoc source folder 
 
-Add the following to `~/.config/sublime-text-3/Packages/User/Default (Linux).sublime-keymap`
+Add a key mapping to `~/.config/sublime-text-3/Packages/User/Default (Linux).sublime-keymap`, for example:
 
 ```
 [
