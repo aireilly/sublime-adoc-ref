@@ -20,16 +20,23 @@ class OpenModuleCommand(sublime_plugin.TextCommand):
                         end = j
                         break
             word = s[start:end].strip() if end != -1 else s[start:].strip()
-            ismodule = bool(re.match("include\:\:modules\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc\[leveloffset=\+[0-9]\]", word))
+            ismodule = bool(re.match("(include\:\:)([A-Za-z0-9+&@#/%?=~_-])*\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc", word))
+            isxref = bool(re.match("(xref:(\.\.\/)*([-A-Za-z0-9+&@#/%?=~_()|!:,.;'])*\/(([-A-Za-z0-9+&@#/%?=~_()|!:,.;'])*\.adoc))", word))
             if ismodule:
-                module = re.search("modules\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc", word).group(0)
+                module = re.search("(include\:\:)([A-Za-z0-9+&@#/%?=~_-]*\/[A-Za-z0-9+&@#/%?=~_-]*\.adoc)", word).group(2)
                 file_path = source_folder + module
+                print ("opening " + file_path)
+                self.view.window().open_file(file_path)
+            if isxref:
+                xref = re.search("(xref\:)(\.\.\/)*([-A-Za-z0-9+&@#/%?=~_()|!:,;']*\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc)", word).group(3)
+                file_path = source_folder + xref
                 print ("opening " + file_path)
                 self.view.window().open_file(file_path)
 
 class ModuleHighlighter(sublime_plugin.EventListener):
     #refactored from https://github.com/leonid-shevtsov/ClickableUrls_SublimeText
-    MODULE_REGEX = "include\:\:modules\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc\[leveloffset=\+[0-9]\]"
+    #added an OR clause for xref highlighting too
+    MODULE_REGEX = "(xref:(\.\.\/)*([-A-Za-z0-9+&@#/%?=~_()|!:,.;'])*\/(([-A-Za-z0-9+&@#/%?=~_()|!:,.;'])*\.adoc))|(include\:\:modules\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc)"
     DEFAULT_MAX_MODULES = 200
     SETTINGS_FILENAME = 'OpenModule.sublime-settings'
 
