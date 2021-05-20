@@ -4,6 +4,7 @@
 
 Sublime plugin to follow `include` and `xref` *.adoc references in asciidoc files.
 
+* Download the repo files and unzip. 
 * Copy all files to `~/.config/sublime-text-3/Packages/User/`
 * Open the `OpenModule.sublime-settings` file and modify `source_folder` to match your asciidoc source folder, for example: 
 ```
@@ -17,7 +18,7 @@ Sublime plugin to follow `include` and `xref` *.adoc references in asciidoc file
 ]
 ```
 
-* Also, optionally, configure a [ctrl + mouse click] shortcut in `Default.sublime-mousemap` for example: 
+* Also, optionally, configure a [ctrl + mouse click] shortcut in `Default.sublime-mousemap`, for example: 
 ```
 [
     {
