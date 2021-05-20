@@ -2,7 +2,7 @@
 
 ![adoc follow](adoc-follow.gif)
 
-Sublime plugin to follow `include` and `xref` *.adoc references in asciidoc files.
+Sublime plugin that allows you to navigate to `include::` and `xref::` *.adoc references in asciidoc files.
 
 * Download the repo files and unzip. 
 * Copy all files to `~/.config/sublime-text-3/Packages/User/`
