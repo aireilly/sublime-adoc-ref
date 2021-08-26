@@ -6,6 +6,11 @@ import threading
 class OpenModuleCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
+        #source_file_path is the full current file path
+        #source_folder should be no longer required
+        #source_file_dict gives a bunch of useful info, incl. folder path
+        source_file_path = self.view.window().active_view().file_name()
+        source_file_dict = self.view.window().extract_variables()
         source_folder = sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('source_folder', True)
         for region in self.view.sel():
             s = self.view.substr(self.view.line(region))
@@ -22,14 +27,14 @@ class OpenModuleCommand(sublime_plugin.TextCommand):
             word = s[start:end].strip() if end != -1 else s[start:].strip()
             ismodule = bool(re.match("(include\:\:)([A-Za-z0-9+&@#/%?=~_-])*\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc", word))
             isxref = bool(re.match("(xref:(\.\.\/)*([-A-Za-z0-9+&@#/%?=~_()|!:,.;'])*\/(([-A-Za-z0-9+&@#/%?=~_()|!:,.;'])*\.adoc))", word))
-            if ismodule:
+            if ismodule:    
                 module = re.search("(include\:\:)([A-Za-z0-9+&@#/%?=~_-]*\/[A-Za-z0-9+&@#/%?=~_-]*\.adoc)", word).group(2)
-                file_path = source_folder + module
+                file_path = source_file_dict.get('folder') + '/' + module
                 print ("opening " + file_path)
                 self.view.window().open_file(file_path)
             if isxref:
                 xref = re.search("(xref\:)(\.\.\/)*([-A-Za-z0-9+&@#/%?=~_()|!:,;']*\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc)", word).group(3)
-                file_path = source_folder + xref
+                file_path = source_file_dict.get('folder') + '/' + xref
                 print ("opening " + file_path)
                 self.view.window().open_file(file_path)
 
