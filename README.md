@@ -1,8 +1,12 @@
-# sublime-adoc-ref
+# Follow asciidoc ref
 
 ![adoc follow](adoc-follow.gif)
 
-Sublime plugin that allows you to navigate to `include::` and `xref::` *.adoc references in asciidoc files.
+Sublime plugin that allows you to navigate to `include::` and `xref::` asciidoc references in asciidoc files.
+
+
+1. Add the project to Sublime Text package control.
+2. Install the newly added package.
 
 * Download the repo files and unzip. 
 * Copy all files to `~/.config/sublime-text-3/Packages/User/`
