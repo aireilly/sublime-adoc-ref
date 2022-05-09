@@ -29,7 +29,7 @@ class OpenModuleCommand(sublime_plugin.TextCommand):
                 self.view.window().open_file(file_path)
             if isxref:
                 #needs work, but should open assembly at least
-                xref = re.search("(xref\:)(\.\.\/)*([-A-Za-z0-9+&@#/%?=~_()|!:,;']*\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc)", word).group(2)
+                xref = re.search("(xref\:)(\.\.\/)*([-A-Za-z0-9+&@#/%?=~_()|!:,;']*\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc)", word).group(3)
                 file_path = source_folder + xref
                 print ("opening " + file_path)
                 self.view.window().open_file(file_path)
