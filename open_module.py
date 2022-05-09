@@ -6,10 +6,7 @@ import threading
 class OpenModuleCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
-        #source_folder = sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('source_folder', True)
-        source_folder = os.path.split(self.view.file_name())
-        print (source_folder)
-
+        source_folder = sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('source_folder', True)
         for region in self.view.sel():
             s = self.view.substr(self.view.line(region))
             i = region.begin() - self.view.line(region).begin()
