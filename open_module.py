@@ -6,7 +6,10 @@ import threading
 class OpenModuleCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
-        source_folder = sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('source_folder', True)
+        #source_folder = sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('source_folder', True)
+        project_data = sublime.active_window().project_data()
+        project_source_folder = project_data['settings']['source_folder']
+        print(sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('source_folder', True))
         for region in self.view.sel():
             s = self.view.substr(self.view.line(region))
             i = region.begin() - self.view.line(region).begin()
@@ -24,15 +27,14 @@ class OpenModuleCommand(sublime_plugin.TextCommand):
             isxref = bool(re.match("(xref:(\.\.\/)*([-A-Za-z0-9+&@#/%?=~_()|!:,.;'])*\/(([-A-Za-z0-9+&@#/%?=~_()|!:,.;'])*\.adoc))", word))
             if ismodule:
                 module = re.search("(include\:\:)([A-Za-z0-9+&@#/%?=~_-]*\/[A-Za-z0-9+&@#/%?=~_-]*\.adoc)", word).group(2)
-                file_path = source_folder + module
-                print ("opening " + file_path)
-                self.view.window().open_file(file_path)
-            if isxref:
+                print ("opening " + module)
+                self.view.window().open_file(module)
+            elif isxref:
                 #needs work, but should open assembly at least
                 xref = re.search("(xref\:)(\.\.\/)*([-A-Za-z0-9+&@#/%?=~_()|!:,;']*\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc)", word).group(3)
-                file_path = source_folder + xref
-                print ("opening " + file_path)
-                self.view.window().open_file(file_path)
+                cleaned_xref = re.search("([-A-Za-z0-9+&@#/%?=~_()|!:,;']*\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc)", xref).group(1)
+                print ("opening " + project_source_folder + cleaned_xref)
+                self.view.window().open_file(project_source_folder + cleaned_xref)
 
 class ModuleHighlighter(sublime_plugin.EventListener):
     #refactored from https://github.com/leonid-shevtsov/ClickableUrls_SublimeText
