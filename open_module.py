@@ -9,6 +9,8 @@ class OpenModuleCommand(sublime_plugin.TextCommand):
         #source_folder = sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('source_folder', True)
         project_data = sublime.active_window().project_data()
         project_source_folder = project_data['settings']['source_folder']
+        if not project_source_folder:
+            print("Error. You are trying to open an AsciiDoc file outside of the parent project...")
         print(sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('source_folder', True))
         for region in self.view.sel():
             s = self.view.substr(self.view.line(region))
@@ -23,23 +25,23 @@ class OpenModuleCommand(sublime_plugin.TextCommand):
                         end = j
                         break
             word = s[start:end].strip() if end != -1 else s[start:].strip()
-            ismodule = bool(re.match("(include\:\:)([A-Za-z0-9+&@#/%?=~_-])*\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc", word))
-            isxref = bool(re.match("(xref:(\.\.\/)*([-A-Za-z0-9+&@#/%?=~_()|!:,.;'])*\/(([-A-Za-z0-9+&@#/%?=~_()|!:,.;'])*\.adoc))", word))
+            ismodule = bool(re.match("(include\:\:)(.)*\/.*\.adoc", word))
+            isxref = bool(re.match("(xref:(\.\.\/)*(.)*\/((.)*\.adoc))", word))
             if ismodule:
-                module = re.search("(include\:\:)([A-Za-z0-9+&@#/%?=~_-]*\/[A-Za-z0-9+&@#/%?=~_-]*\.adoc)", word).group(2)
+                module = re.search("(include\:\:)(.*\/.*\.adoc)", word).group(2)
                 print ("opening " + module)
                 self.view.window().open_file(module)
             elif isxref:
                 #needs work, but should open assembly at least
-                xref = re.search("(xref\:)(\.\.\/)*([-A-Za-z0-9+&@#/%?=~_()|!:,;']*\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc)", word).group(3)
-                cleaned_xref = re.search("([-A-Za-z0-9+&@#/%?=~_()|!:,;']*\/[-A-Za-z0-9+&@#/%?=~_()|!:,.;']*\.adoc)", xref).group(1)
+                xref = re.search("(xref\:)(\.\.\/)*(.*\/.*\.adoc)", word).group(3)
+                cleaned_xref = re.search("(.*\/.*\.adoc)", xref).group(1)
                 print ("opening " + project_source_folder + "/" + cleaned_xref)
-                self.view.window().open_file(project_source_folder + cleaned_xref)
+                self.view.window().open_file(project_source_folder + "/" + cleaned_xref)
 
 class ModuleHighlighter(sublime_plugin.EventListener):
     #refactored from https://github.com/leonid-shevtsov/ClickableUrls_SublimeText
     #added an OR clause for xref highlighting too
-    MODULE_REGEX = "(xref:(\.\.\/)*([-A-Za-z0-9+&@#/%?=~_()|!:,.;'])*\/(([-A-Za-z0-9+&@#/%?=~_()|!:,.;'])*\.adoc))|(include\:\:[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+\.adoc)"
+    MODULE_REGEX = "(xref:(\.\.\/)*(.)*\/((.)*\.adoc))|(include\:\:.*\/.*\.adoc)"
     DEFAULT_MAX_MODULES = 200
     SETTINGS_FILENAME = 'OpenModule.sublime-settings'
 
