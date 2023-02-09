@@ -26,14 +26,14 @@ Sublime plugin that allows you to navigate to `include::` and `xref::` asciidoc 
 ```
 
 4. You can also add a global `sublime-settings` file, but this will be overridden by a local `.sublime-project`.  
-5. Add a key mapping to `~/.config/sublime-text-3/Packages/User/Default (Linux).sublime-keymap`, for example:
+5. Add a key mapping to `~/.config/sublime-text/Packages/User/Default (Linux).sublime-keymap`, for example:
 ```
 [
     { "keys": ["ctrl+alt+m"], "command": "open_module" }
 ]
 ```
 
-* Also, optionally, configure a [ctrl + mouse click] shortcut in `Default.sublime-mousemap`, for example: 
+* Also, optionally, configure a [ctrl + mouse click] shortcut in `~/.config/sublime-text/Packages/User/Default.sublime-mousemap`, for example: 
 ```
 [
     {
