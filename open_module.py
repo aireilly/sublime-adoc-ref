@@ -25,10 +25,10 @@ class OpenModuleCommand(sublime_plugin.TextCommand):
                         end = j
                         break
             word = s[start:end].strip() if end != -1 else s[start:].strip()
-            ismodule = bool(re.match("(include\:\:)(.)*\/.*\.adoc", word))
+            ismodule = bool(re.match("(include\:\:)(.)*\/.*\.(adoc|yaml|yml|txt|json)", word))
             isxref = bool(re.match("(xref:(\.\.\/)*(.)*\/((.)*\.adoc))", word))
             if ismodule:
-                module = re.search("(include\:\:)(.*\/.*\.adoc)", word).group(2)
+                module = re.search("(include\:\:)(.*\/.*\.(adoc|yaml|yml|txt|json))", word).group(2)
                 print ("opening " + module)
                 self.view.window().open_file(module)
             elif isxref:
@@ -41,7 +41,7 @@ class OpenModuleCommand(sublime_plugin.TextCommand):
 class ModuleHighlighter(sublime_plugin.EventListener):
     #refactored from https://github.com/leonid-shevtsov/ClickableUrls_SublimeText
     #added an OR clause for xref highlighting too
-    MODULE_REGEX = "(xref:(\.\.\/)*(.)*\/((.)*\.adoc))|(include\:\:.*\/.*\.adoc)"
+    MODULE_REGEX = "(xref:(\.\.\/)*(.)*\/((.)*\.adoc))|(include\:\:.*\/.*\.(adoc|yaml|yml|txt|json))"
     DEFAULT_MAX_MODULES = 200
     SETTINGS_FILENAME = 'OpenModule.sublime-settings'
 
