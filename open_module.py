@@ -6,12 +6,11 @@ import threading
 class OpenModuleCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
-        #source_folder = sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('source_folder', True)
         project_data = sublime.active_window().project_data()
-        project_source_folder = project_data['settings']['source_folder']
+        project_source_folder = project_data['folders'][0]['path']
         if not project_source_folder:
             print("Error. You are trying to open an AsciiDoc file outside of the parent project...")
-        print(sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('source_folder', True))
+        print(sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('path', True))
         for region in self.view.sel():
             s = self.view.substr(self.view.line(region))
             i = region.begin() - self.view.line(region).begin()

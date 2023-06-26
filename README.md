@@ -1,4 +1,4 @@
-# Follow asciidoc ref
+# Follow AsciiDoc references
 
 ![adoc follow](adoc-follow.gif)
 
@@ -7,21 +7,16 @@ Sublime plugin that allows you to navigate to `include::` and `xref::` asciidoc 
 
 1. Add the `sublime-adoc-ref` project repo to Sublime Text > *Package control*: Add repository: https://github.com/aireilly/sublime-adoc-ref.
 2. Open Sublime Text > *Package control*, search for `sublime-adoc-ref` and install the package. and the newly added package.
-3. Configure a `.sublime-project` file for your asciidoc project, setting a `source_folder` variable.  for example.
+3. Configure a `.sublime-project` file for your AsciiDoc project. Ensure that the path variable is set. For example:
 
 ```
 {
-    "folders":
-    [
+    "folders": [
         {
             "path": ".",
-            "follow_symlinks": true
+            "follow_symlinks": false
         }
-    ],
-    "settings":
-    {
-        "source_folder": "~/openshift-docs/"
-    }
+    ]
 }
 ```
 
