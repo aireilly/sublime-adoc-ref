@@ -1,16 +1,27 @@
 import sublime
 import sublime_plugin
 import re
+import os
 import threading
 
 class OpenModuleCommand(sublime_plugin.TextCommand):
+    # Regex for Antora xrefs: xref:version@component:module:page.adoc[label]
+    # Captures: version@, component:, module:, page.adoc, #anchor
+    ANTORA_XREF_REGEX = r"xref:(?:([^@\[\]]+)@)?(?:([^:\[\]]+):)?(?:([^:\[\]]+):)?([^#\[\]]+\.adoc)(?:#([^\[\]]*))?\[([^\]]*)\]"
+
+    # Regex for plain AsciiDoctor xrefs: xref:path/to/file.adoc#anchor[label]
+    PLAIN_XREF_REGEX = r"xref:((?:\.\.\/)*(?:[^#\[\]]+\/)*[^#\[\]]+\.adoc)(?:#([^\[\]]*))?\[([^\]]*)\]"
 
     def run(self, edit):
         project_data = sublime.active_window().project_data()
-        project_source_folder = project_data['folders'][0]['path']
+        project_source_folder = project_data['folders'][0]['path'] if project_data else None
         if not project_source_folder:
-            print("Error. You are trying to open an AsciiDoc file outside of the parent project...")
-        print(sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME).get('path', True))
+            print("Error: No project folder found. Open a project first.")
+            return
+
+        current_file = self.view.file_name()
+        current_dir = os.path.dirname(current_file) if current_file else project_source_folder
+
         for region in self.view.sel():
             s = self.view.substr(self.view.line(region))
             i = region.begin() - self.view.line(region).begin()
@@ -24,23 +35,131 @@ class OpenModuleCommand(sublime_plugin.TextCommand):
                         end = j
                         break
             word = s[start:end].strip() if end != -1 else s[start:].strip()
-            ismodule = bool(re.match("(include\:\:)(.)*\/.*\.(adoc|yaml|yml|txt|json)", word))
-            isxref = bool(re.match("(xref:(\.\.\/)*(.)*\/((.)*\.adoc))", word))
-            if ismodule:
-                module = re.search("(include\:\:)(.*\/.*\.(adoc|yaml|yml|txt|json))", word).group(2)
-                print ("opening " + module)
+
+            # Check for include directive
+            include_match = re.match(r"include::(.+\.(adoc|yaml|yml|txt|json))", word)
+            if include_match:
+                module = include_match.group(1)
+                # Remove any trailing brackets from includes
+                module = re.sub(r'\[.*\]$', '', module)
+                print("Opening include: " + module)
                 self.view.window().open_file(module)
-            elif isxref:
-                #needs work, but should open assembly at least
-                xref = re.search("(xref\:)(\.\.\/)*(.*\/.*\.adoc)", word).group(3)
-                cleaned_xref = re.search("(.*\/.*\.adoc)", xref).group(1)
-                print ("opening " + project_source_folder + "/" + cleaned_xref)
-                self.view.window().open_file(project_source_folder + "/" + cleaned_xref)
+                continue
+
+            # Check for xref
+            xref_target = self.extract_xref_target(word, current_dir, project_source_folder)
+            if xref_target:
+                print("Opening xref: " + xref_target)
+                self.view.window().open_file(xref_target)
+
+    def extract_xref_target(self, text, current_dir, project_root):
+        """Extract the file path from an xref, supporting both Antora and plain AsciiDoctor styles."""
+
+        # Try Antora-style xref first
+        antora_match = re.match(self.ANTORA_XREF_REGEX, text)
+        if antora_match:
+            version = antora_match.group(1)  # e.g., "1.0"
+            component = antora_match.group(2)  # e.g., "mycomponent"
+            module = antora_match.group(3)  # e.g., "mymodule"
+            page = antora_match.group(4)  # e.g., "mypage.adoc"
+            anchor = antora_match.group(5)  # e.g., "section-id"
+
+            # Build path based on what's provided
+            return self.resolve_antora_xref(version, component, module, page, current_dir, project_root)
+
+        # Try plain AsciiDoctor xref
+        plain_match = re.match(self.PLAIN_XREF_REGEX, text)
+        if plain_match:
+            path = plain_match.group(1)  # e.g., "../modules/page.adoc"
+            anchor = plain_match.group(2)  # e.g., "section-id"
+
+            return self.resolve_plain_xref(path, current_dir, project_root)
+
+        return None
+
+    def resolve_antora_xref(self, version, component, module, page, current_dir, project_root):
+        """Resolve an Antora-style xref to a file path."""
+
+        # If only page is provided (same module), try relative to current directory
+        if not component and not module:
+            # Look in common Antora locations
+            candidates = [
+                os.path.join(current_dir, page),
+                os.path.join(current_dir, "pages", page),
+                os.path.join(current_dir, "..", "pages", page),
+            ]
+            for candidate in candidates:
+                normalized = os.path.normpath(candidate)
+                if os.path.exists(normalized):
+                    return normalized
+            # Fall back to just the page name relative to current dir
+            return os.path.normpath(os.path.join(current_dir, page))
+
+        # If module is provided but not component
+        if module and not component:
+            # Search for module directory in project
+            search_paths = [
+                os.path.join(project_root, "modules", module, "pages", page),
+                os.path.join(project_root, module, "pages", page),
+                os.path.join(project_root, module, page),
+            ]
+            for path in search_paths:
+                if os.path.exists(path):
+                    return path
+            # Return first candidate even if not found
+            return search_paths[0] if search_paths else None
+
+        # Full Antora path with component
+        if component:
+            module_name = module if module else "ROOT"
+            search_paths = [
+                os.path.join(project_root, component, "modules", module_name, "pages", page),
+                os.path.join(project_root, "docs", component, "modules", module_name, "pages", page),
+            ]
+            for path in search_paths:
+                if os.path.exists(path):
+                    return path
+            return search_paths[0] if search_paths else None
+
+        return None
+
+    def resolve_plain_xref(self, path, current_dir, project_root):
+        """Resolve a plain AsciiDoctor xref to a file path."""
+
+        # Handle relative paths
+        if path.startswith("../") or path.startswith("./"):
+            return os.path.normpath(os.path.join(current_dir, path))
+
+        # Handle absolute-like paths (from project root)
+        if "/" in path:
+            # Try relative to current directory first
+            candidate = os.path.normpath(os.path.join(current_dir, path))
+            if os.path.exists(candidate):
+                return candidate
+            # Try relative to project root
+            return os.path.normpath(os.path.join(project_root, path))
+
+        # Simple filename - look in current directory and common locations
+        candidates = [
+            os.path.join(current_dir, path),
+            os.path.join(current_dir, "..", path),
+            os.path.join(project_root, path),
+        ]
+        for candidate in candidates:
+            normalized = os.path.normpath(candidate)
+            if os.path.exists(normalized):
+                return normalized
+
+        # Default to current directory
+        return os.path.normpath(os.path.join(current_dir, path))
 
 class ModuleHighlighter(sublime_plugin.EventListener):
-    #refactored from https://github.com/leonid-shevtsov/ClickableUrls_SublimeText
-    #added an OR clause for xref highlighting too
-    MODULE_REGEX = "(xref:(\.\.\/)*(.)*\/((.)*\.adoc))|(include\:\:.*\/.*\.(adoc|yaml|yml|txt|json))"
+    # Refactored from https://github.com/leonid-shevtsov/ClickableUrls_SublimeText
+    # Matches:
+    #   - include directives: include::path/to/file.adoc[]
+    #   - Antora xrefs: xref:version@component:module:page.adoc#anchor[label]
+    #   - Plain xrefs: xref:path/to/file.adoc#anchor[label] or xref:file.adoc[]
+    MODULE_REGEX = r"(xref:(?:[^@\[\]]+@)?(?:[^:\[\]]+:)*[^#\[\]]+\.adoc(?:#[^\[\]]*)?\[[^\]]*\])|(include::[^\[]+\.(adoc|yaml|yml|txt|json)\[[^\]]*\])"
     DEFAULT_MAX_MODULES = 200
     SETTINGS_FILENAME = 'OpenModule.sublime-settings'
 
