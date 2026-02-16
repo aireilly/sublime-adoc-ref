@@ -194,6 +194,10 @@ class ModuleHighlighter(sublime_plugin.EventListener):
 
     """The logic entry point. Find all modules in view, store and highlight them"""
     def update_module_highlights(self, view):
+        # Only highlight in AsciiDoc files
+        if not view.match_selector(0, 'text.asciidoc'):
+            return
+
         settings = sublime.load_settings(ModuleHighlighter.SETTINGS_FILENAME)
         should_highlight_modules = settings.get('highlight_modules', True)
         max_module_limit = settings.get('max_module_limit', ModuleHighlighter.DEFAULT_MAX_MODULES)
